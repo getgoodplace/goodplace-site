@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "demo.getgoodplace.com" }],
+      "destination": "/demo/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/demo/:path*",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "demo.getgoodplace.com" }],
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    }
+  ]
+}
