@@ -470,8 +470,9 @@ h2.t2{font-size:21px;font-weight:600;letter-spacing:-.02em;line-height:1.25;padd
 .rd .ls .st2 .ck{width:20px;height:20px;border-radius:50%;background:#F0F2F4;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;flex:none}
 .rd .ls .st2.dn .ck{background:#E4EEF6}
 .rd .ls .st2.now{background:#F5F7F9}
-.rd .ls .st2.now .ck{background:#fff;box-shadow:inset 0 0 0 2px #1B2620}
-.rd .ls .st2.now .ck::after{content:"";width:8px;height:8px;border-radius:50%;background:#1B2620;animation:eye 1.3s ease-in-out infinite}
+/* the step being read: the mark's eye, a ring inside a circle, and it holds still (Pablo, 17 Nov) */
+.rd .ls .st2.now .ck{background:#1B2620}
+.rd .ls .st2.now .ck::after{content:"";width:10px;height:10px;border-radius:50%;box-shadow:inset 0 0 0 1.75px #fff}
 @keyframes eye{0%,100%{transform:scale(1)}50%{transform:scale(.55)}}
 .rd .ls .st2.no{color:#6F7873}
 .rd .ls .st2 .n{margin-left:auto;font-size:12.5px;color:#6F7873}
@@ -1856,8 +1857,11 @@ const CLIPS = [
   { t: 'Know every buyer', s: 'What matters most in her own words, her chat, the tour and his call, all on one buyer page.', parts: [[7, 0, 3], [8, 0, 0], [10, 3, 5], [11, 0, 3]] },
   { t: 'Nurture that fits her', s: 'Follow-ups planned from what she said, that change when she does.', parts: [[12, 0, 3], [14, 0, 0]] },
   { t: 'Today and Ask Goodplace', s: 'What needs him this morning, and “what will it take for Susie to close?”.', parts: [[9, 0, 3], [13, 0, 2]] },
-  { t: 'What stops buyers', s: 'The patterns across every buyer, and which sources bring buyers who tour.', parts: [[14, 1, 2]] },
+  { t: 'What stops buyers', s: 'The patterns across every buyer, and which sources bring buyers who tour.', parts: [[14, 1, 2]] },  /* The short pitch (Pablo, 17 Nov: "a separate flow that quickly shows the value"). Three moments: she gets true answers and her
+     real numbers at 9 pm; he knows her before they meet; he just says yes, or asks. Opens straight from ?short. */
+  { short: true, t: 'The short pitch', s: 'About five minutes: his site becomes a live page, Susie gets her answers and her numbers at 9 pm, it all lands on his side, and he says yes or just asks.', parts: [[2, 0, 0], [4, 0, 2], [5, 0, 1], [6, 0, 4], [7, 0, 4], [8, 0, 0], [9, 0, 3], [13, 0, 2], [15, 0, 0]] },
 ];
+const SHORT = CLIPS.findIndex(c => c.short);
 
 /* The presenter engine. Every beat has an intro that plays on arrival and a list of steps
    that the arrow key plays one at a time. Going back rebuilds the beat with no animation. */
@@ -1927,6 +1931,7 @@ async function next() {
     const c = CLIPS[S.clip.i], part = c.parts[S.clip.p];
     if (S.step >= part[2]) {
       if (S.clip.p < c.parts.length - 1) { S.clip.p++; const nx = c.parts[S.clip.p]; return enter(nx[0], nx[1], true); }
+      if (c.short) { S.clip = null; paintHud(); return; }
       return clipEnd();
     }
   }
@@ -1963,9 +1968,10 @@ function paintHud() {
     <span>${S.clip ? '' : beat.k + (n ? ` · step ${S.step} of ${n}` : '')}</span>
     <button data-a="notes" title="Presenter note (N)">Note</button>
     <button data-a="menu" title="All beats (G)">Beats</button>
+    <button data-a="short" title="The short pitch, about five minutes (S)">Short</button>
     <button data-a="clips" title="Wow clips (C)">Clips</button>
     <button data-a="clean" title="Hide the titles, so the devices fill the screen (T)">Titles</button>
-    ${S.clip ? `<span style="color:var(--orange-bright);font-weight:700">Clip ${S.clip.i + 1}: ${CLIPS[S.clip.i].t}</span><button data-a="leave">Leave clip</button>` : ''}`;
+    ${S.clip ? `<span style="color:var(--orange-bright);font-weight:700">${CLIPS[S.clip.i].short ? 'The short pitch' : `Clip ${S.clip.i + 1}: ${CLIPS[S.clip.i].t}`}</span><button data-a="leave">Leave clip</button>` : ''}`;
   if (S.notes) paintNotes();
 }
 function paintNotes() {
@@ -1999,12 +2005,13 @@ document.addEventListener('keydown', e => {
   else if (k === 'r' || k === 'R') enter(0, 0, true);
   else if (k === 'f' || k === 'F') { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); }
   else if (k === 'c' || k === 'C') clipsMenu(!$('#menu'));
+  else if (k === 's' || k === 'S') { menu(false); playClip(SHORT); }
   else if (k === 'Escape' && S.clip) { S.clip = null; paintHud(); }
   else if (/^[0-9]$/.test(k)) { S.clip = null; enter(+k, 0, true); }
 });
 document.addEventListener('click', e => {
   const a = e.target.closest('[data-a]'); const b = e.target.closest('[data-b]');
-  if (a) { const x = a.dataset.a; if (x === 'next') next(); if (x === 'back') back(); if (x === 'notes') { S.notes = !S.notes; paintNotes(); } if (x === 'menu') menu(true); if (x === 'clips') clipsMenu(true); if (x === 'clean') $('#canvas').classList.toggle('clean'); if (x === 'leave') { S.clip = null; paintHud(); } return; }
+  if (a) { const x = a.dataset.a; if (x === 'next') next(); if (x === 'back') back(); if (x === 'notes') { S.notes = !S.notes; paintNotes(); } if (x === 'menu') menu(true); if (x === 'clips') clipsMenu(true); if (x === 'short') { menu(false); playClip(SHORT); } if (x === 'clean') $('#canvas').classList.toggle('clean'); if (x === 'leave') { S.clip = null; paintHud(); } return; }
   const c = e.target.closest('[data-c]');
   if (c) { menu(false); playClip(+c.dataset.c); return; }
   if (b) { menu(false); S.clip = null; enter(+b.dataset.b, 0, true); return; }
@@ -2020,7 +2027,7 @@ addEventListener('load', () => {
   if (q.has('clips')) clipsMenu(true);
   if (q.has('clean')) $('#canvas').classList.add('clean');
   if (/^[bcd]$/i.test(q.get('bar') || '')) document.documentElement.classList.add('bar' + q.get('bar').toUpperCase());
-  enter(startBeat, startStep, !q.has('still'));
+  if (q.has('short')) playClip(SHORT); else enter(startBeat, startStep, !q.has('still'));
 });
 
 /* ---------- wow clips ---------- */
@@ -2029,7 +2036,8 @@ function clipsMenu(open) {
   if (!open) return;
   const el = document.createElement('div'); el.id = 'menu';
   el.innerHTML = `<div class="box" style="width:640px"><h3>Wow clips</h3><div class="sub" style="font-size:13px;margin:-4px 0 8px">Each one plays a short slice of the walkthrough, then comes back here.</div>
-    ${CLIPS.map((c, i) => `<button data-c="${i}"><b>${i + 1}</b><span><span style="font-weight:700">${c.t}</span><br><span class="sub" style="font-size:13px">${c.s}</span></span></button>`).join('')}
+    <button data-c="${SHORT}" style="box-shadow:inset 0 0 0 1.5px var(--orange)"><b>▸</b><span><span style="font-weight:700">${CLIPS[SHORT].t}</span><br><span class="sub" style="font-size:13px">${CLIPS[SHORT].s}</span></span></button>
+    ${CLIPS.filter(c => !c.short).map((c, i) => `<button data-c="${i}"><b>${i + 1}</b><span><span style="font-weight:700">${c.t}</span><br><span class="sub" style="font-size:13px">${c.s}</span></span></button>`).join('')}
     <div class="keys">Press C to open this list. Esc leaves a clip and carries on in the full demo.</div></div>`;
   document.body.appendChild(el);
 }
@@ -2038,7 +2046,7 @@ function clipEnd() {
   const i = S.clip.i; menu(false);
   const el = document.createElement('div'); el.id = 'menu';
   el.innerHTML = `<div class="box" style="text-align:center"><div style="font-size:40px;color:var(--orange)">${MARK}</div><h3 style="margin-top:8px">End of “${CLIPS[i].t}”</h3>
-    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">${i < CLIPS.length - 1 ? `<span class="btn fill" data-c="${i + 1}">Next clip: ${CLIPS[i + 1].t}</span>` : ''}<span class="btn" data-a="clips">All clips</span></div></div>`;
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:12px">${CLIPS[i + 1] && !CLIPS[i + 1].short ? `<span class="btn fill" data-c="${i + 1}">Next clip: ${CLIPS[i + 1].t}</span>` : ''}<span class="btn" data-a="clips">All clips</span></div></div>`;
   document.body.appendChild(el);
 }
 
