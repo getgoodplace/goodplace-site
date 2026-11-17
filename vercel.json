@@ -1,20 +1,53 @@
 {
+  "redirects": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "demo.getgoodplace.com"
+        }
+      ],
+      "destination": "/demo/",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "demo.getgoodplace.com" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "demo.getgoodplace.com"
+        }
+      ],
       "destination": "/demo/index.html"
     }
   ],
   "headers": [
     {
       "source": "/demo/:path*",
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     },
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "demo.getgoodplace.com" }],
-      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+      "has": [
+        {
+          "type": "host",
+          "value": "demo.getgoodplace.com"
+        }
+      ],
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ]
 }
